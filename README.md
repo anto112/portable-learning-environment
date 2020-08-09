@@ -5,7 +5,7 @@
 
 ![](./assets/ss-2.png)
 
-![](/home/anto112/Documents/PLE/test/src/assets/ss_3.png)
+![](./assets/ss_3.png)
 
 ### Installation and Usage
 
