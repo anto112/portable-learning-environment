@@ -50,7 +50,7 @@ class Main(QMainWindow):
         self.showMaximized()
         self.setMinimumSize(1200, 800)
         icon = QIcon()
-        icon.addPixmap(QPixmap("assets/ico.png"), QIcon.Normal, QIcon.Off)
+        icon.addPixmap(QPixmap("./assets/ico.png"), QIcon.Normal, QIcon.Off)
         self.setWindowIcon(icon)
 
         self.centralwidget = QWidget(self)
@@ -123,14 +123,14 @@ class Main(QMainWindow):
         self.label_7 = QLabel(self.centralwidget)
         self.label_7.setGeometry(QRect(375, 540, 180, 170))
         self.label_7.setText("")
-        self.label_7.setPixmap(QPixmap("assets/mcut.png"))
+        self.label_7.setPixmap(QPixmap("./assets/mcut.png"))
         self.label_7.setScaledContents(True)
         self.label_7.setObjectName("label_7")
 
         self.label_8 = QLabel(self.centralwidget)
         self.label_8.setGeometry(QRect(1050, 550, 350, 140))
         self.label_8.setText("")
-        self.label_8.setPixmap(QPixmap("assets/112-removebg.png"))
+        self.label_8.setPixmap(QPixmap("./assets/112-removebg.png"))
         self.label_8.setScaledContents(True)
         self.label_8.setObjectName("label_8")
 
@@ -146,7 +146,7 @@ class Main(QMainWindow):
         # self.pushButton_2 = QPushButton(self.centralwidget)
         # self.pushButton_2.setGeometry(QRect(840, 250, 100, 50))
         # icon_2 = QIcon()
-        # icon_2.addPixmap(QPixmap("./assets/github.png"),
+        # icon_2.addPixmap(QPixmap("././assets/github.png"),
         #                  QIcon.Normal, QIcon.Off)
         # self.pushButton_2.setIcon(icon_2)
         # self.pushButton_2.setIconSize(QSize(100, 50))
@@ -155,7 +155,7 @@ class Main(QMainWindow):
         # self.pushButton_3 = QPushButton(self.centralwidget)
         # self.pushButton_3.setGeometry(QRect(730, 250, 100, 50))
         # icon_3 = QIcon()
-        # icon_3.addPixmap(QPixmap("./assets/google.png"),
+        # icon_3.addPixmap(QPixmap("././assets/google.png"),
         #                  QIcon.Normal, QIcon.Off)
         # self.pushButton_3.setIcon(icon_3)
         # self.pushButton_3.setIconSize(QSize(100, 50))
@@ -164,7 +164,7 @@ class Main(QMainWindow):
         # self.pushButton_4 = QPushButton(self.centralwidget)
         # self.pushButton_4.setGeometry(QRect(950, 250, 100, 50))
         # icon_4 = QIcon()
-        # icon_4.addPixmap(QPixmap("./assets/github_class.png"),
+        # icon_4.addPixmap(QPixmap("././assets/github_class.png"),
         #                  QIcon.Normal, QIcon.Off)
         # self.pushButton_4.setIcon(icon_4)
         # self.pushButton_4.setIconSize(QSize(100, 50))
@@ -374,7 +374,7 @@ class Main(QMainWindow):
 
     def retranslateUi(self, MainWindow):
         _translate = QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Moil - Portable Learning Environment"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
         self.menuAssigment.setTitle(_translate("MainWindow", "Assigment"))
         # self.menuTeaching_Material.setTitle(_translate("MainWindow", "Teaching Material"))

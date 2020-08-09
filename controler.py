@@ -6,6 +6,9 @@ from PyQt5.QtPrintSupport import *
 import webbrowser
 import os
 import secrets
+from github import Github
+from github import InputGitTreeElement
+import glob
 
 
 class Controller:
@@ -14,8 +17,7 @@ class Controller:
         self.MainWindow = QtWidgets.QMainWindow()
         self.main = Main()
         self.connect_event()
-        pwd = os.getcwd()
-        os.system("jupyter notebook --notebook-dir=" + str(pwd) + "/Workdir &")
+        os.system("jupyter notebook --notebook-dir= /home/$USER/ &")
         self.repo_url = None
         self.dirName = None
         sys.exit(app.exec_())
@@ -49,7 +51,8 @@ class Controller:
     def open_file(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self.main, "All files", "",
+        path = str(os.environ['HOME'])
+        fileName, _ = QFileDialog.getOpenFileName(self.main, "All files", path,
                                                   "All Files (*);;Python Files (*.py);;Notebook Files (*.ipynb)",
                                                   options=options)
         if fileName:
@@ -62,26 +65,24 @@ class Controller:
         QMessageBox.warning(self.main, 'Warning !!', "\nUnder Development !!")
 
     def open_folder(self):
-        self.dirName = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select project folder:', '$user',
+        path = str(os.environ['HOME'])
+        self.dirName = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select project folder:', path,
                                                                   QtWidgets.QFileDialog.ShowDirsOnly)
         if self.dirName:
             self.dir_select.setText(self.dirName)
 
     def push_to_github(self):
         self.dialog = QtWidgets.QDialog()
-        self.dialog.setWindowTitle("Clone Repository From Github")
-        self.dialog.setMinimumWidth(550)
-        self.dialog.setFixedHeight(180)
+        self.dialog.setWindowTitle("Upload repository to GitHub")
+        self.dialog.setMinimumWidth(500)
+        self.dialog.setFixedHeight(150)
 
         VLayout = QtWidgets.QVBoxLayout()
         Hlayout1 = QtWidgets.QHBoxLayout()
-        Hlayout2 = QtWidgets.QHBoxLayout()
         Hlayout3 = QtWidgets.QHBoxLayout()
 
         label = QtWidgets.QLabel(self.dialog)
         label.setText(" WorkDir      : ")
-        label_1 = QtWidgets.QLabel(self.dialog)
-        label_1.setText("Github URL : ")
 
         button = QtWidgets.QPushButton()
         button.setText("Open")
@@ -90,10 +91,8 @@ class Controller:
 
         self.dir_select = QtWidgets.QLineEdit()
         self.dir_select.setObjectName("dir_select")
-        path = os.getcwd()
-        self.dir_select.setText(str(path))
-
-        self.repo_link = QtWidgets.QLineEdit()
+        path = str(os.environ['HOME'])
+        self.dir_select.setText(path)
 
         add = QtWidgets.QPushButton()
         add.setObjectName("add_link")
@@ -109,38 +108,108 @@ class Controller:
         Hlayout1.addWidget(self.dir_select)
         Hlayout1.addWidget(button)
 
-        Hlayout2.addWidget(label_1)
-        Hlayout2.addWidget(self.repo_link)
-
         Hlayout3.addStretch()
         Hlayout3.addWidget(add, 0, QtCore.Qt.AlignRight)
         Hlayout3.addWidget(cancel, 0, QtCore.Qt.AlignRight)
 
         VLayout.addLayout(Hlayout1, 1)
-        VLayout.addLayout(Hlayout2, 2)
-        VLayout.addLayout(Hlayout3, 3)
+        VLayout.addLayout(Hlayout3, 2)
         self.dialog.setLayout(VLayout)
         self.dialog.exec()
 
     def push_submit(self):
-        self.repo_url = self.repo_link.text()
         self.dirName = self.dir_select.text()
         if self.dirName is None:
             QMessageBox.warning(self.main, 'Warning !!', "\nSelect folder you want to push to github repository !!")
-        elif self.repo_url is "":
-            QMessageBox.warning(self.main, 'Warning !!', "\nPlease write Github Repository Url !!")
         else:
-            path = self.repo_url
-            path = path.rstrip(os.sep)
-            path = os.path.basename(path)
-            if os.path.isdir(path):
-                token = secrets.token_hex(5)
-                print(token)
-                print(self.repo_url)
-                self.dialog.accept()
-            else:
-                QMessageBox.warning(self.main, 'Warning !!', "Your github repository not available in your "
-                                                             "\n\npersonal computer")
+            path = self.dirName
+
+            dialog = QtWidgets.QDialog()
+            dialog.setWindowTitle("Setup Github Account")
+            dialog.setMinimumWidth(250)
+            dialog.setFixedHeight(120)
+
+            VLayout = QtWidgets.QVBoxLayout()
+            Hlayout1 = QtWidgets.QHBoxLayout()
+            Hlayout2 = QtWidgets.QHBoxLayout()
+            Hlayout3 = QtWidgets.QHBoxLayout()
+
+            label = QtWidgets.QLabel(dialog)
+            label.setText("User Name : ")
+            label_1 = QtWidgets.QLabel(dialog)
+            label_1.setText("   Password : ")
+
+            username = QtWidgets.QLineEdit()
+            password = QtWidgets.QLineEdit()
+
+            Ok = QtWidgets.QPushButton()
+            Ok.setObjectName("Ok")
+            Ok.setText('Ok')
+            Ok.clicked.connect(dialog.accept)
+
+            cancel = QtWidgets.QPushButton()
+            cancel.setObjectName("cancel")
+            cancel.setText('Cancel')
+            cancel.clicked.connect(dialog.reject)
+
+            Hlayout1.addWidget(label)
+            Hlayout1.addWidget(username)
+
+            Hlayout2.addWidget(label_1)
+            Hlayout2.addWidget(password)
+
+            Hlayout3.addStretch()
+            Hlayout3.addWidget(Ok, 0, QtCore.Qt.AlignRight)
+            Hlayout3.addWidget(cancel, 0, QtCore.Qt.AlignRight)
+
+            VLayout.addLayout(Hlayout1, 1)
+            VLayout.addLayout(Hlayout2, 2)
+            VLayout.addLayout(Hlayout3, 3)
+            dialog.setLayout(VLayout)
+            dialog.exec()
+            token = secrets.token_hex(5)
+            user = str(username.text())
+            passwd = str(password.text())
+            if user and passwd != "":
+                os.chdir(path)
+                pwd = str(os.getcwd())
+                repo_name = path.rstrip(os.sep)
+                repo_name = os.path.basename(repo_name)
+                try:
+                    g = Github(user, passwd)
+                    repo = g.get_user().get_repo(repo_name)
+                    file = glob.glob(pwd + '/*')
+                    commit_message = str(token)
+                    file_name = [os.path.basename(x) for x in glob.glob(path + '/*')]
+                    master_ref = repo.get_git_ref('heads/master')
+                    master_sha = master_ref.object.sha
+                    base_tree = repo.get_git_tree(master_sha)
+                    element_list = list()
+                    for i, entry in enumerate(file):
+                        with open(entry) as input_file:
+                            data = input_file.read()
+                        if entry.endswith('.png'):
+                            data = base64.b64encode(data)
+                        element = InputGitTreeElement(file_name[i], '100644', 'blob', data)
+                        element_list.append(element)
+                    tree = repo.create_git_tree(element_list, base_tree)
+                    print(tree)
+                    if tree.sha != base_tree.sha:
+                        parent = repo.get_git_commit(master_sha)
+                        commit = repo.create_git_commit(commit_message, tree, [parent])
+                        master_ref.edit(commit.sha)
+                    self.dialog.close()
+                    buttonReply = QMessageBox.information(self.main, 'Information !!', "Uploaded to github repository "
+                                                                                       "\n\nis succeed !!",
+                                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if buttonReply == QMessageBox.Yes:
+                        self.main.add_new_tab(QtCore.QUrl("https://github.com/" + user + "/" + repo_name))
+
+                except:
+                    QMessageBox.warning(self.main, 'Warning !!', "Error git authentication !!!! \n\n"
+                                                                 " 1. Make sure you typing correct username and password \n"
+                                                                 " 2. Make sure You're repository already connect to github.\n"
+                                                                 " plese ref:https://docs.github.com/en/github/using-git/adding-a-remote ")
 
     def clone(self):
         self.repo_url = self.repo_link.text()
@@ -155,17 +224,18 @@ class Controller:
             path = self.repo_url
             path = path.rstrip(os.sep)
             path = os.path.basename(path)
+            pwd = os.getcwd()
             if os.path.isdir(path):
                 buttonReply = QMessageBox.question(self.main, 'File exist !!', "File already exist !!!",
                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if buttonReply == QMessageBox.Yes:
-                    self.main.add_new_tab(QtCore.QUrl("http://localhost:8888/tree/" + str(path)))
+                    self.main.add_new_tab(QtCore.QUrl("http://localhost:8888/tree/" + str(pwd) + '/' + str(path)))
 
             elif os.path.isdir(path[:-4]):
                 buttonReply = QMessageBox.question(self.main, 'File exist !!', "File already exist !!!",
                                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if buttonReply == QMessageBox.Yes:
-                    self.main.add_new_tab(QtCore.QUrl("http://localhost:8888/tree/" + str(path[:-4])))
+                    self.main.add_new_tab(QtCore.QUrl("http://localhost:8888/tree/" + str(pwd) + '/' + str(path[:-4])))
 
             else:
                 os.system("git clone " + str(self.repo_url))
@@ -206,8 +276,8 @@ class Controller:
 
         self.dir_select = QtWidgets.QLineEdit()
         self.dir_select.setObjectName("dir_select")
-        path = os.getcwd()
-        self.dir_select.setText(str(path))
+        path = str(os.environ['HOME'])
+        self.dir_select.setText(path)
 
         self.repo_link = QtWidgets.QLineEdit()
 
@@ -270,7 +340,6 @@ class Controller:
         else:
             self.main.tabs.currentWidget().forward()
 
-
     def open_github(self):
         self.main.add_new_tab(QtCore.QUrl("https://github.com/"), 'Loading ...')
 
@@ -287,7 +356,7 @@ class Controller:
         msgbox.exec()
 
     def open_help(self):
-        url = "/help.html"
+        url = "/assets/help.html"
         source = os.getcwd()
         self.main.add_new_tab(QUrl("file://" + str(source) + url))
 
@@ -296,6 +365,6 @@ class Controller:
         self.main.close()
 
 
-if __name__ == '__main__':
-    window = Controller()
-    sys.exit(window.exec_())
+# if __name__ == '__main__':
+#     window = Controller()
+#     sys.exit(window.exec_())
